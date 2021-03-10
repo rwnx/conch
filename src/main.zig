@@ -1,6 +1,16 @@
 const std = @import("std");
-const VERSION = "0.1.0";
+const eql = std.mem.eql;
+const stdin = std.io.getStdIn().inStream();
+const stdout = std.io.getStdOut().outStream();
 
-pub fn main() anyerror!void {
-    std.debug.print("🐚 conch v{}\n", .{VERSION});
+pub fn main() !void {
+    var buf: [10]u8 = undefined;
+
+    while(true) {
+      try stdout.print("> ", .{});
+
+      const line = try stdin.readUntilDelimiterOrEof(&buf, '\n');
+      
+      try stdout.print("\"{}\"\n", .{line});
+    }
 }
