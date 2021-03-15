@@ -13,6 +13,10 @@ const Allocator = std.mem.Allocator;
 
 const ChildProcess = std.ChildProcess;
 
+fn shutdown() void {
+    print("🦀 Bye!\n", .{});
+}
+
 fn get_line(allocator: *Allocator) ![]u8 {
     var list = ArrayList(u8).init(allocator);
 
@@ -51,12 +55,31 @@ pub fn main() !void {
         while (tokens.next()) |token| {
             try args.append(token);
         }
+        const argv = args.items[0..];
+        const command = argv[0];
 
-        const child = try ChildProcess.exec(.{
+        // Builtins!
+        if (eql(u8, command, "exit")) {
+            shutdown();
+            break;
+        }
+
+        if (eql(u8, command, "cd")) {
+            print("error: not implemented\n", .{});
+            continue;
+        }
+
+        const child = ChildProcess.exec(.{
             .allocator = allocator,
-            .argv = args.items[0..],
-        });
+            .argv = argv,
+        }) catch |err| switch (err) {
+            error.FileNotFound => {
+                print("{}: command not found\n", .{args.items[0]});
+                continue;
+            },
+            else => |e| return e,
+        };
 
-        print("{}\n", .{child.stdout[0..]});
+        print("{}", .{child.stdout[0..]});
     }
 }
