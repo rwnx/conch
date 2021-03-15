@@ -5,5 +5,5 @@ const expect = std.testing.expect;
 const main = @import("./main.zig");
 
 test "smoke test" {
-  main.main() catch unreachable;
+    main.main() catch unreachable;
 }
