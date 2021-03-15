@@ -11,6 +11,8 @@ const ArrayList = std.ArrayList;
 
 const Allocator = std.mem.Allocator;
 
+const ChildProcess = std.ChildProcess;
+
 fn get_line(allocator: *Allocator) ![]u8 {
     var list = ArrayList(u8).init(allocator);
 
@@ -32,17 +34,31 @@ fn get_line(allocator: *Allocator) ![]u8 {
     return list.items;
 }
 
+
 pub fn main() !void {
-  
     while (true) {
+        // alloc Arena + dealloc each loop
         var arena = ArenaAllocator.init(page_allocator);
         defer arena.deinit();
         const allocator = &arena.allocator;
 
-        try stdout.print("> ", .{});
-
+        // prompt for line
+        try stdout.print("🐚 > ", .{});
         const line = get_line(allocator) catch "";
 
-        print("{}\n", .{line});
+
+        // split,collect argv into args = [][]
+        var args = ArrayList([]const u8).init(allocator);
+        var tokens = std.mem.tokenize(line, " ");
+        while (tokens.next()) | token | {
+          try args.append(token);
+        }
+
+        const child = try ChildProcess.exec(.{
+          .allocator = allocator,
+          .argv      = args.items[0..]
+        });
+
+        print("{}\n", .{child.stdout[0..]});
     }
 }
