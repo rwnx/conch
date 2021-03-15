@@ -81,7 +81,10 @@ pub fn main() !void {
                 print("{}: command not found\n", .{args.items[0]});
                 continue;
             },
-            else => |e| return e,
+            else => |e| {
+                print("Fatal: {}\n", .{e});
+                continue;
+            },
         };
 
         print("{}", .{child.stdout[0..]});
