@@ -56,6 +56,10 @@ pub fn main() !void {
             try args.append(token);
         }
         const argv = args.items[0..];
+
+        if (argv.len < 1) {
+            continue;
+        }
         const command = argv[0];
 
         // Builtins!
