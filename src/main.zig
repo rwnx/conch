@@ -13,6 +13,30 @@ const Allocator = std.mem.Allocator;
 
 const ChildProcess = std.ChildProcess;
 
+const c = @cImport({
+    @cInclude("termios.h");
+    @cInclude("unistd.h");
+    @cInclude("stdlib.h");
+});
+
+var orig_termios: c.termios = undefined;
+
+pub fn enableRawMode() void {
+    _ = c.tcgetattr(c.STDIN_FILENO, &orig_termios);
+    _ = c.atexit(disableRawMode);
+
+    var raw: c.termios = undefined;
+    raw.c_lflag &= ~(@as(u8, c.ECHO));
+    raw.c_lflag &= ~(@as(u8, c.ICANON));
+
+    _ = c.tcsetattr(c.STDIN_FILENO, c.TCSAFLUSH, &raw);
+}
+
+pub fn disableRawMode() callconv(.C) void {
+    _ = c.tcsetattr(c.STDIN_FILENO, c.TCSAFLUSH, &orig_termios);
+}
+
+
 fn shutdown() void {
     print("🦀 Bye!\n", .{});
 }
@@ -95,6 +119,8 @@ fn collect_args(line: []u8, allocator: *Allocator) ![][]const u8 {
 
 
 pub fn main() !void {
+    enableRawMode();
+    defer disableRawMode();
     while (true) {
         // alloc Arena + dealloc each loop
         var arena = ArenaAllocator.init(page_allocator);
@@ -110,13 +136,16 @@ pub fn main() !void {
 
         const argv = try collect_args(line, allocator);
 
-
         if (argv.len < 1) {
             continue;
         }
         const command = argv[0];
 
         // Builtins!
+        if (eql(u8, command, "q")) {
+            shutdown();
+            break;
+        }
         if (eql(u8, command, "exit")) {
             shutdown();
             break;
