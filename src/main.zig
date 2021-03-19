@@ -93,7 +93,7 @@ pub fn main() !void {
                 if(err == error.FileNotFound) {
                     print("cd: no such directory: {}\n", .{new_dir});
                 } else {
-                    print("cd: {}", .{err});
+                    print("cd: {}\n", .{err});
                 }
             }
             
