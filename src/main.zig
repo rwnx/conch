@@ -48,6 +48,22 @@ fn get_line(allocator: *Allocator) ![]u8 {
 
     return allocator.shrink(buffer, read_index + 1)[0..read_index];
 }
+fn run_cd(argv: [][]const u8, allocator: *Allocator) !void {
+    var cwd : std.fs.Dir = std.fs.cwd();
+
+    const new_dir = argv[1];
+    var nextdir = cwd.openDir(new_dir, .{});
+    
+    if(nextdir) |cd_target| {
+        try cd_target.setAsCwd();
+    } else |err| {
+        if(err == error.FileNotFound) {
+            print("cd: no such directory: {}\n", .{new_dir});
+        } else {
+            print("cd: {}\n", .{err});
+        }
+    }
+}
 
 fn run(argv: [][]const u8, allocator: *Allocator) !void {
     const child = ChildProcess.exec(.{
@@ -67,6 +83,16 @@ fn run(argv: [][]const u8, allocator: *Allocator) !void {
     print("{}", .{child.stdout[0..]});
 }
 
+fn collect_args(line: []u8, allocator: *Allocator) ![][]const u8 {
+    var args = ArrayList([]const u8).init(allocator);
+    var tokens = std.mem.tokenize(line, " ");
+    while (tokens.next()) |token| {
+        try args.append(token);
+    }
+
+    return args.toOwnedSlice();
+}
+
 
 pub fn main() !void {
     while (true) {
@@ -82,13 +108,8 @@ pub fn main() !void {
         try stdout.print("🐚{}> ", .{cwd_display});
         const line = get_line(allocator) catch "";
 
-        // split,collect argv into args = [][]
-        var args = ArrayList([]const u8).init(allocator);
-        var tokens = std.mem.tokenize(line, " ");
-        while (tokens.next()) |token| {
-            try args.append(token);
-        }
-        const argv = args.items[0..];
+        const argv = try collect_args(line, allocator);
+
 
         if (argv.len < 1) {
             continue;
@@ -102,20 +123,7 @@ pub fn main() !void {
         }
 
         if (eql(u8, command, "cd")) {
-            const new_dir = argv[1];
-            var nextdir = cwd.openDir(new_dir, .{});
-            
-            if(nextdir) |cd_target| {
-                try cd_target.setAsCwd();
-            } else |err| {
-                if(err == error.FileNotFound) {
-                    print("cd: no such directory: {}\n", .{new_dir});
-                } else {
-                    print("cd: {}\n", .{err});
-                }
-            }
-            
-            continue;
+            try run_cd(argv, allocator);
         }
 
         try run(argv, allocator);
