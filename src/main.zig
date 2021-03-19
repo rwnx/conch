@@ -17,25 +17,36 @@ fn shutdown() void {
     print("🦀 Bye!\n", .{});
 }
 
+
 fn get_line(allocator: *Allocator) ![]u8 {
-    var list = ArrayList(u8).init(allocator);
+    var buffer_size : u64 = 10;
+    var read_index : u64 = 0;
+    var buffer: []u8 = try allocator.alloc(u8, buffer_size);
 
     while (true) {
-        const byte = stdin.readByte() catch |err| switch (err) {
-            error.EndOfStream => {
+        const byte = try stdin.readByte();
+
+        if (byte) {
+            if (byte == '\n') {
                 break;
-            },
-            else => |e| return e,
-        };
+            }
+            if(read_index == buffer_size - 1) {
+                buffer_size = buffer_size * 2;
+                buffer = try allocator.realloc(buffer, buffer_size);
+            }
+            buffer[read_index] = byte;
+            read_index = read_index + 1;
 
-        if (byte == '\n') {
-            break;
+        } else |err| {
+            if(err == error.EndOfStream) {
+                break;
+            } else {
+                return err;
+            }
         }
-
-        try list.append(byte);
     }
 
-    return list.items;
+    return allocator.shrink(buffer, read_index + 1)[0..read_index];
 }
 
 pub fn main() !void {
@@ -45,8 +56,11 @@ pub fn main() !void {
         defer arena.deinit();
         const allocator = &arena.allocator;
 
+        var cwd : std.fs.Dir = std.fs.cwd();
+        const cwd_display : []u8 = try cwd.realpathAlloc(allocator, ".");
+
         // prompt for line
-        try stdout.print("🐚 > ", .{});
+        try stdout.print("🐚{}> ", .{cwd_display});
         const line = get_line(allocator) catch "";
 
         // split,collect argv into args = [][]
@@ -69,7 +83,20 @@ pub fn main() !void {
         }
 
         if (eql(u8, command, "cd")) {
-            print("error: not implemented\n", .{});
+            const new_dir = argv[1];
+            var nextdir = cwd.openDir(new_dir, .{});
+            
+
+            if(nextdir) |cd_target| {
+                try cd_target.setAsCwd();
+            } else |err| {
+                if(err == error.FileNotFound) {
+                    print("cd: no such directory: {}\n", .{new_dir});
+                } else {
+                    print("cd: {}", .{err});
+                }
+            }
+            
             continue;
         }
 
