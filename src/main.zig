@@ -49,6 +49,25 @@ fn get_line(allocator: *Allocator) ![]u8 {
     return allocator.shrink(buffer, read_index + 1)[0..read_index];
 }
 
+fn run(argv: [][]const u8, allocator: *Allocator) !void {
+    const child = ChildProcess.exec(.{
+        .allocator = allocator,
+        .argv = argv,
+    }) catch |err| switch (err) {
+        error.FileNotFound => {
+            print("{}: command not found\n", .{ argv[0] });
+            return;
+        },
+        else => |e| {
+            print("Fatal: {}\n", .{e});
+            return;
+        },
+    };
+
+    print("{}", .{child.stdout[0..]});
+}
+
+
 pub fn main() !void {
     while (true) {
         // alloc Arena + dealloc each loop
@@ -86,7 +105,6 @@ pub fn main() !void {
             const new_dir = argv[1];
             var nextdir = cwd.openDir(new_dir, .{});
             
-
             if(nextdir) |cd_target| {
                 try cd_target.setAsCwd();
             } else |err| {
@@ -100,20 +118,6 @@ pub fn main() !void {
             continue;
         }
 
-        const child = ChildProcess.exec(.{
-            .allocator = allocator,
-            .argv = argv,
-        }) catch |err| switch (err) {
-            error.FileNotFound => {
-                print("{}: command not found\n", .{args.items[0]});
-                continue;
-            },
-            else => |e| {
-                print("Fatal: {}\n", .{e});
-                continue;
-            },
-        };
-
-        print("{}", .{child.stdout[0..]});
+        try run(argv, allocator);
     }
 }
