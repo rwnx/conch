@@ -1,0 +1,24 @@
+name: Test
+
+on: 
+  push:
+  schedule:
+    - cron: "0 2 * * 0"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test ${{matrix.zig}}
+    strategy:
+      matrix:
+        zig:
+          - "beta"
+          - "edge"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Zig
+        run: sudo snap install zig --classic --${{matrix.zig}}
+
+      - run: zig version
+      - run: zig test **/*_test.zig
