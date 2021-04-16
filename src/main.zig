@@ -60,7 +60,7 @@ pub fn main() !void {
         const cwd_display : []u8 = try cwd.realpathAlloc(allocator, ".");
 
         // prompt for line
-        try stdout.print("🐚{}> ", .{cwd_display});
+        try stdout.print("🐚{s}> ", .{cwd_display});
         const line = get_line(allocator) catch "";
 
         // split,collect argv into args = [][]
@@ -91,9 +91,9 @@ pub fn main() !void {
                 try cd_target.setAsCwd();
             } else |err| {
                 if(err == error.FileNotFound) {
-                    print("cd: no such directory: {}\n", .{new_dir});
+                    print("cd: no such directory: {s}\n", .{new_dir});
                 } else {
-                    print("cd: {}\n", .{err});
+                    print("cd: {s}\n", .{err});
                 }
             }
             
@@ -105,15 +105,15 @@ pub fn main() !void {
             .argv = argv,
         }) catch |err| switch (err) {
             error.FileNotFound => {
-                print("{}: command not found\n", .{args.items[0]});
+                print("{s}: command not found\n", .{args.items[0]});
                 continue;
             },
             else => |e| {
-                print("Fatal: {}\n", .{e});
+                print("Fatal: {s}\n", .{e});
                 continue;
             },
         };
 
-        print("{}", .{child.stdout[0..]});
+        print("{s}", .{child.stdout[0..]});
     }
 }
