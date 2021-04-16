@@ -1,0 +1,16 @@
+# Contributing
+
+1. Fork this project 🍽
+2. Create your feature branch (git checkout -b my-new-feature)
+3. Commit your changes (git commit -am 'Add some feature')
+4. Push to the branch (git push origin my-new-feature)
+5. Create a new Pull Request to the default branch
+
+At this point you're waiting on the maintainers. They might suggest an improvement or provide feedback.
+
+Once everyone's happy the request will be merged.
+
+## Issues
+
+In an ideal world, changes come with discussion, so for general points and structural changes an issue might be more productive.
+Try to provide as much useful or relevant information as possible so as to improve the project for everyone.
