@@ -1,4 +1,4 @@
-# Conch Shell
+# Conch Shell [![Test](https://github.com/jerometwell/conch/actions/workflows/test.yml/badge.svg)](https://github.com/jerometwell/conch/actions/workflows/test.yml)
 
 A _conch_ shell. geddit? _conch_ **_shell_** 😅
 ```sh
