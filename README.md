@@ -21,3 +21,9 @@ zig build run
 
 zig test **/*_test.zig
 ```
+
+
+## Misc
+```sh
+docker run -v $PWD:/app euantorano/zig:latest run src/main.zig
+```

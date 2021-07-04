@@ -3,7 +3,8 @@ const eql = std.mem.eql;
 const stdin = std.io.getStdIn().reader();
 const stdout = std.io.getStdOut().writer();
 const stderr = std.io.getStdErr().writer();
-const print = @import("std").debug.print;
+const print = std.debug.print;
+const terminal = @import("./terminal.zig");
 
 const page_allocator = std.heap.page_allocator;
 const ArenaAllocator = std.heap.ArenaAllocator;
@@ -50,6 +51,9 @@ fn get_line(allocator: *Allocator) ![]u8 {
 }
 
 pub fn main() !void {
+    try terminal.setup(page_allocator);
+    try terminal.handleSignalInput();
+
     while (true) {
         // alloc Arena + dealloc each loop
         var arena = ArenaAllocator.init(page_allocator);
