@@ -65,7 +65,7 @@ pub fn main() !void {
 
         // split,collect argv into args = [][]
         var args = ArrayList([]const u8).init(allocator);
-        var tokens = std.mem.tokenize(line, " ");
+        var tokens = std.mem.tokenize(u8, line, " ");
         while (tokens.next()) |token| {
             try args.append(token);
         }
